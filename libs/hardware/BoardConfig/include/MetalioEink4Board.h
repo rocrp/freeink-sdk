@@ -13,8 +13,11 @@ constexpr uint16_t MAIN_POWER = 1u << 6;
 constexpr uint16_t SCREEN_POWER = 1u << 5;
 constexpr uint16_t TOUCH_RESET = 1u << 9;
 constexpr uint16_t POWER_PULSE = 1u << 11;
-constexpr uint16_t OUTPUTS = MAIN_POWER | SCREEN_POWER | TOUCH_RESET | POWER_PULSE | (1u << 4) | (1u << 1);
-constexpr uint16_t BOOT_OUTPUT = MAIN_POWER | POWER_PULSE;
+// FSUSB42 USB mux select: high routes native USB to the MCU/flash side (stock default), low to the camera.
+constexpr uint16_t USB_MUX_SELECT = 1u << 0;
+constexpr uint16_t OUTPUTS =
+    MAIN_POWER | SCREEN_POWER | TOUCH_RESET | POWER_PULSE | USB_MUX_SELECT | (1u << 4) | (1u << 1);
+constexpr uint16_t BOOT_OUTPUT = MAIN_POWER | POWER_PULSE | USB_MUX_SELECT;
 inline uint16_t output = BOOT_OUTPUT;
 inline bool ready = false;
 inline bool bootPowerPending = true;
@@ -54,7 +57,7 @@ inline bool setOutput(uint16_t value) {
 inline bool begin() {
   if (ready) return true;
   pinMode(44, OUTPUT);
-  digitalWrite(44, LOW);      // Haptic feedback is not enabled on this target.
+  digitalWrite(44, LOW);      // Vibration motor idles off; the application pulses it.
   pinMode(46, INPUT_PULLUP);  // SD DAT3/CD: input-only, never part of the 1-bit data bus.
   pinMode(2, INPUT_PULLUP);
   if (!Wire.begin(41, 42, 400000)) return false;
